@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppLayout } from './layouts/AppLayout';
 import { useWorkspaceStore } from './store/workspaceStore';
 import { DashboardPage } from './pages/DashboardPage';
@@ -8,6 +8,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { LogsPage } from './pages/LogsPage';
 import { AIStudioPage } from './pages/AIStudioPage';
 import { GitPage } from './pages/GitPage';
+import { useCoreEngine } from './hooks/useCoreEngine';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -15,6 +16,11 @@ export default function App() {
     '[SYSTEM] Control Center Initialized',
     '[INFO] StreamMate Developer Tools Ready',
   ]);
+
+  const addLog = (msg: string) => {
+    const time = new Date().toLocaleTimeString();
+    setLogs(prev => [...prev, `[${time}] ${msg}`]);
+  };
 
   const {
     workspace,
@@ -25,17 +31,45 @@ export default function App() {
     setExistingFolders
   } = useWorkspaceStore();
 
-  const addLog = (msg: string) => {
-    const time = new Date().toLocaleTimeString();
-    setLogs(prev => [...prev, `[${time}] ${msg}`]);
+  const { workspaceScanner, workspaceEngine, scannerStatus } = useCoreEngine(addLog);
+
+  // Sync workspace store to engine
+  useEffect(() => {
+    workspaceEngine.loadWorkspace({
+      metadata: { name: workspace.name, description: workspace.description, version: '1.0' },
+      folders: [],
+      projects: projects.map(p => ({
+        id: p.id,
+        name: p.name,
+        path: p.repoPath,
+        type: p.type
+      }))
+    });
+  }, [workspace, projects, workspaceEngine]);
+
+  const handleScan = () => {
+    workspaceScanner.scanWorkspace();
   };
 
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardPage workspace={workspace} projects={projects} addLog={addLog} />;
+        return <DashboardPage 
+          workspace={workspace} 
+          projects={projects} 
+          scannerStatus={scannerStatus} 
+          onScan={handleScan} 
+          addLog={addLog} 
+        />;
       case 'workspace':
-        return <WorkspacePage workspace={workspace} setWorkspace={setWorkspace} existingFolders={existingFolders} setExistingFolders={setExistingFolders} addLog={addLog} />;
+        return <WorkspacePage 
+          workspace={workspace} 
+          setWorkspace={setWorkspace} 
+          projects={projects}
+          existingFolders={existingFolders} 
+          setExistingFolders={setExistingFolders} 
+          addLog={addLog} 
+        />;
       case 'projects':
         return <ProjectsPage projects={projects} setProjects={setProjects} addLog={addLog} />;
       case 'ai-studio':

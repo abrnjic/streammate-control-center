@@ -6,6 +6,11 @@ export enum EventType {
   PluginRegistered = 'PluginRegistered',
   PluginLoaded = 'PluginLoaded',
   PluginDisabled = 'PluginDisabled',
+  WorkspaceScanStarted = 'WORKSPACE_SCAN_STARTED',
+  WorkspaceScanFinished = 'WORKSPACE_SCAN_FINISHED',
+  ProjectFound = 'PROJECT_FOUND',
+  ProjectUpdated = 'PROJECT_UPDATED',
+  WorkspaceRefreshed = 'WORKSPACE_REFRESHED',
 }
 
 export interface BaseEvent {
@@ -48,6 +53,31 @@ export interface PluginDisabledEvent extends BaseEvent {
   payload: { pluginId: string };
 }
 
+export interface WorkspaceScanStartedEvent extends BaseEvent {
+  type: EventType.WorkspaceScanStarted;
+  payload: { workspaceId: string };
+}
+
+export interface WorkspaceScanFinishedEvent extends BaseEvent {
+  type: EventType.WorkspaceScanFinished;
+  payload: { workspaceId: string, projectCount: number };
+}
+
+export interface ProjectFoundEvent extends BaseEvent {
+  type: EventType.ProjectFound;
+  payload: { projectId: string, name: string };
+}
+
+export interface ProjectUpdatedEvent extends BaseEvent {
+  type: EventType.ProjectUpdated;
+  payload: { projectId: string, changes: string[] };
+}
+
+export interface WorkspaceRefreshedEvent extends BaseEvent {
+  type: EventType.WorkspaceRefreshed;
+  payload: { workspaceId: string };
+}
+
 /**
  * Union type for all supported events in the system.
  */
@@ -58,6 +88,11 @@ export type SystemEvent =
   | ProjectRemovedEvent 
   | PluginRegisteredEvent 
   | PluginLoadedEvent 
-  | PluginDisabledEvent;
+  | PluginDisabledEvent
+  | WorkspaceScanStartedEvent
+  | WorkspaceScanFinishedEvent
+  | ProjectFoundEvent
+  | ProjectUpdatedEvent
+  | WorkspaceRefreshedEvent;
 
 export type EventHandler<T extends SystemEvent> = (event: T) => void;

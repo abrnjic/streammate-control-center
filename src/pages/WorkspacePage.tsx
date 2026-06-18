@@ -1,55 +1,92 @@
 import React from 'react';
-import { Briefcase, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { WorkspaceConfig } from '../types/workspace';
+import { Briefcase, AlertTriangle, CheckCircle2, FolderOpen } from 'lucide-react';
+import { WorkspaceConfig, Project } from '../types/workspace';
 
 interface WorkspacePageProps {
   workspace: WorkspaceConfig;
   setWorkspace: (ws: WorkspaceConfig) => void;
+  projects: Project[];
   existingFolders: string[];
   setExistingFolders: (folders: string[]) => void;
   addLog: (msg: string) => void;
 }
 
-export function WorkspacePage({ workspace, setWorkspace, existingFolders, setExistingFolders, addLog }: WorkspacePageProps) {
+export function WorkspacePage({ workspace, setWorkspace, projects, existingFolders, setExistingFolders, addLog }: WorkspacePageProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setWorkspace({ ...workspace, [e.target.name]: e.target.value });
   };
 
   return (
-    <div className="max-w-4xl bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-xl shadow-black/20 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-800">
-        <div className="flex items-center gap-3">
-          <Briefcase className="text-primary w-6 h-6" />
-          <h3 className="text-xl font-semibold text-slate-100">Workspace Configuration</h3>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="max-w-4xl bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-xl shadow-black/20">
+        <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            <Briefcase className="text-primary w-6 h-6" />
+            <h3 className="text-xl font-semibold text-slate-100">Workspace Configuration</h3>
+          </div>
+          <div className="text-xs font-mono text-slate-500">JSON STORAGE ACTIVE</div>
         </div>
-        <div className="text-xs font-mono text-slate-500">JSON STORAGE ACTIVE</div>
+
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <SettingField label="Workspace Name" name="name" value={workspace.name || ''} onChange={handleChange} />
+            <SettingField label="GitHub Username" name="githubUsername" value={workspace.githubUsername || ''} onChange={handleChange} />
+            <SettingField label="Default Branch" name="defaultBranch" value={workspace.defaultBranch || ''} onChange={handleChange} />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-2">Workspace Description</label>
+            <textarea
+              name="description"
+              value={workspace.description || ''}
+              onChange={handleChange}
+              rows={3}
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm resize-none"
+            />
+          </div>
+
+          <div className="pt-6 border-t border-slate-800 space-y-6">
+            <h4 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4">Directory Mapping</h4>
+            <ValidatedFolderField label="Workspace Root Folder" name="rootFolder" value={workspace.rootFolder || ''} onChange={handleChange} existingFolders={existingFolders} setExistingFolders={setExistingFolders} addLog={addLog} />
+            <ValidatedFolderField label="AI Export Folder" name="aiExportFolder" value={workspace.aiExportFolder || ''} onChange={handleChange} existingFolders={existingFolders} setExistingFolders={setExistingFolders} addLog={addLog} />
+            <ValidatedFolderField label="Backups Folder" name="backupsFolder" value={workspace.backupsFolder || ''} onChange={handleChange} existingFolders={existingFolders} setExistingFolders={setExistingFolders} addLog={addLog} />
+            <ValidatedFolderField label="Logs Folder" name="logsFolder" value={workspace.logsFolder || ''} onChange={handleChange} existingFolders={existingFolders} setExistingFolders={setExistingFolders} addLog={addLog} />
+            <ValidatedFolderField label="Tools Folder" name="toolsFolder" value={workspace.toolsFolder || ''} onChange={handleChange} existingFolders={existingFolders} setExistingFolders={setExistingFolders} addLog={addLog} />
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <SettingField label="Workspace Name" name="name" value={workspace.name || ''} onChange={handleChange} />
-          <SettingField label="GitHub Username" name="githubUsername" value={workspace.githubUsername || ''} onChange={handleChange} />
-          <SettingField label="Default Branch" name="defaultBranch" value={workspace.defaultBranch || ''} onChange={handleChange} />
+      <div className="max-w-4xl bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-xl shadow-black/20">
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-800">
+          <FolderOpen className="text-primary w-6 h-6" />
+          <h3 className="text-xl font-semibold text-slate-100">Discovered Projects</h3>
         </div>
         
-        <div>
-          <label className="block text-sm font-medium text-slate-400 mb-2">Workspace Description</label>
-          <textarea
-            name="description"
-            value={workspace.description || ''}
-            onChange={handleChange}
-            rows={3}
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm resize-none"
-          />
-        </div>
-
-        <div className="pt-6 border-t border-slate-800 space-y-6">
-          <h4 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4">Directory Mapping</h4>
-          <ValidatedFolderField label="Workspace Root Folder" name="rootFolder" value={workspace.rootFolder || ''} onChange={handleChange} existingFolders={existingFolders} setExistingFolders={setExistingFolders} addLog={addLog} />
-          <ValidatedFolderField label="AI Export Folder" name="aiExportFolder" value={workspace.aiExportFolder || ''} onChange={handleChange} existingFolders={existingFolders} setExistingFolders={setExistingFolders} addLog={addLog} />
-          <ValidatedFolderField label="Backups Folder" name="backupsFolder" value={workspace.backupsFolder || ''} onChange={handleChange} existingFolders={existingFolders} setExistingFolders={setExistingFolders} addLog={addLog} />
-          <ValidatedFolderField label="Logs Folder" name="logsFolder" value={workspace.logsFolder || ''} onChange={handleChange} existingFolders={existingFolders} setExistingFolders={setExistingFolders} addLog={addLog} />
-          <ValidatedFolderField label="Tools Folder" name="toolsFolder" value={workspace.toolsFolder || ''} onChange={handleChange} existingFolders={existingFolders} setExistingFolders={setExistingFolders} addLog={addLog} />
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-slate-300">
+            <thead className="text-xs uppercase bg-slate-950/50 text-slate-400 border-b border-slate-800">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Name</th>
+                <th className="px-4 py-3 font-semibold">Type</th>
+                <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-4 py-3 font-semibold">Location</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800 font-mono">
+              {projects.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-slate-500 italic">No projects scanned or configured.</td>
+                </tr>
+              ) : projects.map((p) => (
+                <tr key={p.id} className="hover:bg-slate-800/20 transition-colors">
+                  <td className="px-4 py-3 font-semibold text-slate-200">{p.name}</td>
+                  <td className="px-4 py-3"><span className="bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">{p.type}</span></td>
+                  <td className="px-4 py-3 text-emerald-400 font-medium">{p.status}</td>
+                  <td className="px-4 py-3 text-slate-500 truncate max-w-[200px]">{p.repoPath || "N/A"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
