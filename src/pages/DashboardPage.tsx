@@ -1,14 +1,18 @@
 import React from 'react';
-import { Briefcase, FolderOpen, Bot, Github, Settings as SettingsIcon, Play, Workflow, Globe, Server, Activity, Clock, Database, RefreshCw } from 'lucide-react';
+import { Briefcase, FolderOpen, Bot, Github, Settings as SettingsIcon, Play, Workflow, Globe, Server, Activity, Clock, Database, RefreshCw, ShieldCheck } from 'lucide-react';
 import { WorkspaceConfig, Project } from '../types/workspace';
 import { StatusCard } from '../components/StatusCard';
 import { ScannerStatus } from '../core/WorkspaceScanner/types';
+import { SafetyCheckResult } from '../core/DevelopmentSafety/types';
 
 interface DashboardProps {
   workspace: WorkspaceConfig;
   projects: Project[];
   scannerStatus: ScannerStatus;
+  safetyStatus: SafetyCheckResult;
+  isSafetyCheckRunning: boolean;
   onScan: () => void;
+  onSafetyCheck: () => void;
   addLog: (msg: string) => void;
 }
 
@@ -27,7 +31,7 @@ function ActionButton({ icon, label, onClick, variant = 'secondary', disabled = 
   );
 }
 
-export function DashboardPage({ workspace, projects, scannerStatus, onScan, addLog }: DashboardProps) {
+export function DashboardPage({ workspace, projects, scannerStatus, safetyStatus, isSafetyCheckRunning, onScan, onSafetyCheck, addLog }: DashboardProps) {
   const configuredRepos = projects.filter(p => p.repoPath.trim() !== "").length;
   const configuredFolders = [
     workspace.rootFolder, workspace.aiExportFolder, workspace.backupsFolder, 
@@ -46,11 +50,15 @@ export function DashboardPage({ workspace, projects, scannerStatus, onScan, addL
     ? new Date(scannerStatus.lastScanFinishedAt).toLocaleTimeString() 
     : 'Never';
 
+  let safetyColor = "text-emerald-400 bg-emerald-400/10";
+  if (safetyStatus.status === 'Warnings') safetyColor = "text-amber-400 bg-amber-400/10";
+  if (safetyStatus.status === 'Errors') safetyColor = "text-red-400 bg-red-400/10";
+
   const cards = [
     { id: '1', title: 'Projects Found', value: projects.length.toString(), icon: <FolderOpen className="w-5 h-5" />, color: 'text-blue-400', bg: 'bg-blue-400/10' },
     { id: '2', title: 'Folders Mapped', value: `${configuredFolders} / 5`, icon: <Database className="w-5 h-5" />, color: configuredFolders === 5 ? 'text-emerald-400' : 'text-amber-400', bg: configuredFolders === 5 ? 'bg-emerald-400/10' : 'bg-amber-400/10' },
     { id: '3', title: 'Workspace Health', value: configStatus, icon: <Activity className="w-5 h-5" />, color: statusColor.split(' ')[0], bg: statusColor.split(' ')[1] },
-    { id: '4', title: 'Last Scan', value: lastScanTime, icon: <Clock className="w-5 h-5" />, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+    { id: '4', title: 'Development Safety', value: safetyStatus.status, icon: <ShieldCheck className="w-5 h-5" />, color: safetyColor.split(' ')[0], bg: safetyColor.split(' ')[1] },
     { id: '5', title: 'Scanner Status', value: scannerStatus.isScanning ? 'Scanning...' : 'Idle', icon: <Bot className="w-5 h-5" />, color: scannerStatus.isScanning ? 'text-primary' : 'text-slate-400', bg: scannerStatus.isScanning ? 'bg-primary/20' : 'bg-slate-400/10' }
   ];
 
@@ -78,6 +86,13 @@ export function DashboardPage({ workspace, projects, scannerStatus, onScan, addL
             onClick={onScan} 
             variant="primary" 
             disabled={scannerStatus.isScanning}
+          />
+          <ActionButton 
+            icon={<ShieldCheck />} 
+            label={isSafetyCheckRunning ? "Running Safety Check..." : "Run Safety Check"} 
+            onClick={onSafetyCheck} 
+            variant="primary" 
+            disabled={isSafetyCheckRunning}
           />
           <ActionButton icon={<Workflow />} label="Sync AI Export" onClick={() => handleAction('Sync AI Export')} />
           <ActionButton icon={<Github />} label="Open GitHub Desktop" onClick={() => handleAction('Open GitHub Desktop')} />

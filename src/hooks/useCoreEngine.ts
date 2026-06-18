@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { EventBus, LoggerEngine, WorkspaceEngine, WorkspaceScanner } from '../core';
+import { EventBus, LoggerEngine, WorkspaceEngine, WorkspaceScanner, ConfigEngine, DevelopmentSafety } from '../core';
 import { EventType, SystemEvent } from '../core/EventBus/types';
 import { ScannerStatus } from '../core/WorkspaceScanner/types';
+import { SafetyCheckResult } from '../core/DevelopmentSafety/types';
 import { WorkspaceData, WorkspaceProject, WorkspaceFolder } from '../core/WorkspaceEngine/types';
 
 export function useCoreEngine(addLog: (msg: string) => void) {
@@ -10,6 +11,8 @@ export function useCoreEngine(addLog: (msg: string) => void) {
     logger: LoggerEngine;
     workspaceEngine: WorkspaceEngine;
     workspaceScanner: WorkspaceScanner;
+    configEngine: ConfigEngine;
+    developmentSafety: DevelopmentSafety;
   } | null>(null);
 
   const [scannerStatus, setScannerStatus] = useState<ScannerStatus>({
@@ -18,18 +21,32 @@ export function useCoreEngine(addLog: (msg: string) => void) {
     error: null
   });
 
+  const [safetyStatus, setSafetyStatus] = useState<SafetyCheckResult>({
+    status: 'Healthy',
+    warningsCount: 0,
+    errorsCount: 0,
+    duplicates: [],
+    gitWarnings: [],
+    exportIssues: [],
+    workspaceIssues: []
+  });
+
+  const [isSafetyCheckRunning, setIsSafetyCheckRunning] = useState(false);
+
   const [projectsCount, setProjectsCount] = useState(0);
 
   if (!engineRef.current) {
     const eventBus = new EventBus();
     const logger = new LoggerEngine();
+    const configEngine = new ConfigEngine(eventBus);
     const workspaceEngine = new WorkspaceEngine(eventBus);
     const workspaceScanner = new WorkspaceScanner(logger, workspaceEngine, eventBus);
+    const developmentSafety = new DevelopmentSafety(logger, eventBus, workspaceScanner, workspaceEngine, configEngine);
     
-    engineRef.current = { eventBus, logger, workspaceEngine, workspaceScanner };
+    engineRef.current = { eventBus, logger, workspaceEngine, workspaceScanner, configEngine, developmentSafety };
   }
 
-  const { eventBus, logger, workspaceEngine, workspaceScanner } = engineRef.current;
+  const { eventBus, logger, workspaceEngine, workspaceScanner, developmentSafety } = engineRef.current;
 
   useEffect(() => {
     const unsubLog = logger.subscribe((entry) => {
@@ -51,17 +68,31 @@ export function useCoreEngine(addLog: (msg: string) => void) {
       }
     });
 
+    const unsubSafetyStart = eventBus.on(EventType.SafetyCheckStarted, () => {
+      setIsSafetyCheckRunning(true);
+    });
+
+    const unsubSafetyFinish = eventBus.on(EventType.SafetyCheckFinished, () => {
+      setIsSafetyCheckRunning(false);
+      setSafetyStatus(developmentSafety.getStatus());
+    });
+
     return () => {
       unsubLog();
       unsubStart();
       unsubFinish();
+      unsubSafetyStart();
+      unsubSafetyFinish();
     };
   }, [eventBus, logger, workspaceScanner, addLog]);
 
   return {
     workspaceScanner,
     workspaceEngine,
+    developmentSafety,
     scannerStatus,
-    projectsCount
+    projectsCount,
+    safetyStatus,
+    isSafetyCheckRunning
   };
 }

@@ -31,13 +31,19 @@ export default function App() {
     setExistingFolders
   } = useWorkspaceStore();
 
-  const { workspaceScanner, workspaceEngine, scannerStatus } = useCoreEngine(addLog);
+  const { workspaceScanner, workspaceEngine, developmentSafety, scannerStatus, safetyStatus, isSafetyCheckRunning } = useCoreEngine(addLog);
 
   // Sync workspace store to engine
   useEffect(() => {
     workspaceEngine.loadWorkspace({
       metadata: { name: workspace.name, description: workspace.description, version: '1.0' },
-      folders: [],
+      folders: [
+        { path: workspace.rootFolder, type: 'root' },
+        { path: workspace.aiExportFolder, type: 'aiExport' },
+        { path: workspace.backupsFolder, type: 'backups' },
+        { path: workspace.logsFolder, type: 'logs' },
+        { path: workspace.toolsFolder, type: 'tools' }
+      ],
       projects: projects.map(p => ({
         id: p.id,
         name: p.name,
@@ -51,14 +57,21 @@ export default function App() {
     workspaceScanner.scanWorkspace();
   };
 
+  const handleSafetyCheck = () => {
+    developmentSafety.runSafetyCheck();
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardPage 
           workspace={workspace} 
           projects={projects} 
-          scannerStatus={scannerStatus} 
+          scannerStatus={scannerStatus}
+          safetyStatus={safetyStatus}
+          isSafetyCheckRunning={isSafetyCheckRunning}
           onScan={handleScan} 
+          onSafetyCheck={handleSafetyCheck}
           addLog={addLog} 
         />;
       case 'workspace':
