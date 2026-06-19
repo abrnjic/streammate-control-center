@@ -6,4 +6,5 @@ export * from './PluginEngine';
 export * from './WorkspaceScanner';
 export * from './DevelopmentSafety';
 export * from './ProjectInspector';
+export * from './AIWorkspace';
 

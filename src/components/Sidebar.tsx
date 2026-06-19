@@ -14,6 +14,7 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutGrid className="w-5 h-5" /> },
     { id: 'workspace', label: 'Workspace', icon: <Briefcase className="w-5 h-5" /> },
     { id: 'projects', label: 'Projects', icon: <FolderOpen className="w-5 h-5" /> },
+    { id: 'ai-workspace', label: 'AI Workspace', icon: <Workflow className="w-5 h-5" /> },
     { id: 'ai-studio', label: 'AI Studio', icon: <Bot className="w-5 h-5" /> },
     { id: 'git', label: 'Git', icon: <Github className="w-5 h-5" /> },
     { id: 'settings', label: 'Settings', icon: <SettingsIcon className="w-5 h-5" /> },

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { EventBus, LoggerEngine, WorkspaceEngine, WorkspaceScanner, ConfigEngine, DevelopmentSafety, ProjectInspector } from '../core';
+import { EventBus, LoggerEngine, WorkspaceEngine, WorkspaceScanner, ConfigEngine, DevelopmentSafety, ProjectInspector, AIWorkspace } from '../core';
 import { EventType, SystemEvent } from '../core/EventBus/types';
 import { ScannerStatus } from '../core/WorkspaceScanner/types';
 import { SafetyCheckResult } from '../core/DevelopmentSafety/types';
@@ -15,6 +15,7 @@ export function useCoreEngine(addLog: (msg: string) => void) {
     configEngine: ConfigEngine;
     developmentSafety: DevelopmentSafety;
     projectInspector: ProjectInspector;
+    aiWorkspace: AIWorkspace;
   } | null>(null);
 
   const [scannerStatus, setScannerStatus] = useState<ScannerStatus>({
@@ -56,11 +57,12 @@ export function useCoreEngine(addLog: (msg: string) => void) {
     const workspaceScanner = new WorkspaceScanner(logger, workspaceEngine, eventBus);
     const developmentSafety = new DevelopmentSafety(logger, eventBus, workspaceScanner, workspaceEngine, configEngine);
     const projectInspector = new ProjectInspector(logger, eventBus, workspaceEngine);
+    const aiWorkspace = new AIWorkspace(logger, eventBus);
     
-    engineRef.current = { eventBus, logger, workspaceEngine, workspaceScanner, configEngine, developmentSafety, projectInspector };
+    engineRef.current = { eventBus, logger, workspaceEngine, workspaceScanner, configEngine, developmentSafety, projectInspector, aiWorkspace };
   }
 
-  const { eventBus, logger, workspaceEngine, workspaceScanner, developmentSafety, projectInspector } = engineRef.current;
+  const { eventBus, logger, workspaceEngine, workspaceScanner, developmentSafety, projectInspector, aiWorkspace } = engineRef.current;
 
   useEffect(() => {
     const unsubLog = logger.subscribe((entry) => {
@@ -117,6 +119,7 @@ export function useCoreEngine(addLog: (msg: string) => void) {
     workspaceEngine,
     developmentSafety,
     projectInspector,
+    aiWorkspace,
     scannerStatus,
     projectsCount,
     safetyStatus,

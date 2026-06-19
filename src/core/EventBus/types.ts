@@ -21,6 +21,11 @@ export enum EventType {
   ProjectInspectionFinished = 'PROJECT_INSPECTION_FINISHED',
   ProjectHealthUpdated = 'PROJECT_HEALTH_UPDATED',
   ProjectWarningFound = 'PROJECT_WARNING_FOUND',
+  AIAgentRegistered = 'AI_AGENT_REGISTERED',
+  AITaskCreated = 'AI_TASK_CREATED',
+  AITaskAssigned = 'AI_TASK_ASSIGNED',
+  AIExportReceived = 'AI_EXPORT_RECEIVED',
+  AIReviewStarted = 'AI_REVIEW_STARTED',
 }
 
 export interface BaseEvent {
@@ -138,6 +143,31 @@ export interface ProjectWarningFoundEvent extends BaseEvent {
   payload: { projectId: string; warning: string };
 }
 
+export interface AIAgentRegisteredEvent extends BaseEvent {
+  type: EventType.AIAgentRegistered;
+  payload: { agentName: string; specialization: string };
+}
+
+export interface AITaskCreatedEvent extends BaseEvent {
+  type: EventType.AITaskCreated;
+  payload: { taskId: string; taskName: string };
+}
+
+export interface AITaskAssignedEvent extends BaseEvent {
+  type: EventType.AITaskAssigned;
+  payload: { taskId: string; agentName: string };
+}
+
+export interface AIExportReceivedEvent extends BaseEvent {
+  type: EventType.AIExportReceived;
+  payload: { exportName: string };
+}
+
+export interface AIReviewStartedEvent extends BaseEvent {
+  type: EventType.AIReviewStarted;
+  payload: { reviewId: string; exportName: string };
+}
+
 /**
  * Union type for all supported events in the system.
  */
@@ -163,6 +193,11 @@ export type SystemEvent =
   | ProjectInspectionStartedEvent
   | ProjectInspectionFinishedEvent
   | ProjectHealthUpdatedEvent
-  | ProjectWarningFoundEvent;
+  | ProjectWarningFoundEvent
+  | AIAgentRegisteredEvent
+  | AITaskCreatedEvent
+  | AITaskAssignedEvent
+  | AIExportReceivedEvent
+  | AIReviewStartedEvent;
 
 export type EventHandler<T extends SystemEvent> = (event: T) => void;

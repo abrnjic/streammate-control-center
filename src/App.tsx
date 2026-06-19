@@ -7,6 +7,7 @@ import { ProjectsPage } from './pages/ProjectsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { LogsPage } from './pages/LogsPage';
 import { AIStudioPage } from './pages/AIStudioPage';
+import { AIWorkspacePage } from './pages/AIWorkspacePage';
 import { GitPage } from './pages/GitPage';
 import { useCoreEngine } from './hooks/useCoreEngine';
 
@@ -36,6 +37,7 @@ export default function App() {
     workspaceEngine, 
     developmentSafety, 
     projectInspector,
+    aiWorkspace,
     scannerStatus, 
     safetyStatus, 
     isSafetyCheckRunning,
@@ -109,6 +111,16 @@ export default function App() {
           isProjectInspectionRunning={isProjectInspectionRunning}
           onInspectProjects={handleInspectProjects}
           addLog={addLog} 
+        />;
+      case 'ai-workspace':
+        return <AIWorkspacePage
+          agents={aiWorkspace.getAgents()}
+          tasks={aiWorkspace.getTasks()}
+          exports={aiWorkspace.getExports()}
+          reviews={aiWorkspace.getReviews()}
+          stats={aiWorkspace.getStats()}
+          onTriggerEvents={() => aiWorkspace.triggerMockEvents()}
+          addLog={addLog}
         />;
       case 'ai-studio':
         return <AIStudioPage />;
