@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { FolderOpen, Plus, Trash2 } from 'lucide-react';
+import { FolderOpen, Plus, Trash2, HeartPulse, RefreshCw } from 'lucide-react';
 import { Project } from '../types/workspace';
+import { InspectedProject } from '../core/ProjectInspector/types';
 
 interface ProjectsPageProps {
   projects: Project[];
   setProjects: (projects: Project[]) => void;
+  inspectedProjects: InspectedProject[];
+  isProjectInspectionRunning: boolean;
+  onInspectProjects: () => void;
   addLog: (msg: string) => void;
 }
 
-export function ProjectsPage({ projects, setProjects, addLog }: ProjectsPageProps) {
+export function ProjectsPage({ projects, setProjects, inspectedProjects, isProjectInspectionRunning, onInspectProjects, addLog }: ProjectsPageProps) {
   const [newProject, setNewProject] = useState<Partial<Project>>({
     name: "", type: "React", repoPath: "", githubUrl: "", devBranch: "main", status: "Active"
   });
@@ -36,6 +40,67 @@ export function ProjectsPage({ projects, setProjects, addLog }: ProjectsPageProp
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-xl shadow-black/20">
+        <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            <HeartPulse className="text-primary w-6 h-6" />
+            <h3 className="text-xl font-semibold text-slate-100">Inspected Projects Overview</h3>
+          </div>
+          <button 
+            onClick={onInspectProjects}
+            disabled={isProjectInspectionRunning}
+            className="bg-primary border border-primary hover:bg-primary/90 text-white flex items-center gap-2.5 px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(14,165,233,0.3)]"
+          >
+            <RefreshCw className={`w-4 h-4 ${isProjectInspectionRunning ? 'animate-spin' : ''}`} />
+            {isProjectInspectionRunning ? 'Inspecting...' : 'Run Inspection'}
+          </button>
+        </div>
+
+        {inspectedProjects.length === 0 ? (
+          <div className="text-center py-8 text-slate-500">
+            No inspection data available. Run inspection to view project health.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-slate-300">
+              <thead className="text-xs text-slate-500 uppercase bg-slate-950 border-b border-slate-800">
+                <tr>
+                  <th className="px-4 py-3 rounded-tl-lg">Name</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Health</th>
+                  <th className="px-4 py-3">Location</th>
+                  <th className="px-4 py-3">Last Checked</th>
+                  <th className="px-4 py-3 rounded-tr-lg">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inspectedProjects.map((p) => {
+                  let healthColor = "text-slate-400";
+                  if (p.health === 'HEALTHY') healthColor = "text-emerald-400 font-semibold";
+                  if (p.health === 'WARNING') healthColor = "text-amber-400 font-semibold";
+                  if (p.health === 'ERROR') healthColor = "text-red-400 font-semibold";
+
+                  const timeOptions: Intl.DateTimeFormatOptions = { hour: '2-digit', minute:'2-digit', second:'2-digit' };
+                  const checkedAt = p.lastChecked ? new Date(p.lastChecked).toLocaleTimeString(undefined, timeOptions) : 'Never';
+
+                  return (
+                    <tr key={p.id} className="border-b border-slate-800/50 hover:bg-slate-800/20">
+                      <td className="px-4 py-3 font-medium text-slate-200">{p.name}</td>
+                      <td className="px-4 py-3"><span className="bg-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded border border-slate-700">{p.type}</span></td>
+                      <td className={`px-4 py-3 ${healthColor}`}>{p.health}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-slate-400">{p.location}</td>
+                      <td className="px-4 py-3 text-slate-500">{checkedAt}</td>
+                      <td className="px-4 py-3 text-xs text-slate-400">{p.notes.join(' ')}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-xl shadow-black/20">
         <div className="flex items-center gap-3 mb-8 pb-4 border-b border-slate-800">
           <FolderOpen className="text-primary w-6 h-6" />

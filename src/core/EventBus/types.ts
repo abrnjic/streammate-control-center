@@ -17,6 +17,10 @@ export enum EventType {
   InvalidExport = 'INVALID_EXPORT',
   GitWarning = 'GIT_WARNING',
   WorkspaceWarning = 'WORKSPACE_WARNING',
+  ProjectInspectionStarted = 'PROJECT_INSPECTION_STARTED',
+  ProjectInspectionFinished = 'PROJECT_INSPECTION_FINISHED',
+  ProjectHealthUpdated = 'PROJECT_HEALTH_UPDATED',
+  ProjectWarningFound = 'PROJECT_WARNING_FOUND',
 }
 
 export interface BaseEvent {
@@ -114,6 +118,26 @@ export interface WorkspaceWarningEvent extends BaseEvent {
   payload: { issue: string };
 }
 
+export interface ProjectInspectionStartedEvent extends BaseEvent {
+  type: EventType.ProjectInspectionStarted;
+  payload: { workspaceId: string };
+}
+
+export interface ProjectInspectionFinishedEvent extends BaseEvent {
+  type: EventType.ProjectInspectionFinished;
+  payload: { workspaceId: string; totalProjects: number; healthy: number; warnings: number; errors: number };
+}
+
+export interface ProjectHealthUpdatedEvent extends BaseEvent {
+  type: EventType.ProjectHealthUpdated;
+  payload: { projectId: string; health: 'HEALTHY' | 'WARNING' | 'ERROR' | 'UNKNOWN' };
+}
+
+export interface ProjectWarningFoundEvent extends BaseEvent {
+  type: EventType.ProjectWarningFound;
+  payload: { projectId: string; warning: string };
+}
+
 /**
  * Union type for all supported events in the system.
  */
@@ -135,6 +159,10 @@ export type SystemEvent =
   | DuplicateFoundEvent
   | InvalidExportEvent
   | GitWarningEvent
-  | WorkspaceWarningEvent;
+  | WorkspaceWarningEvent
+  | ProjectInspectionStartedEvent
+  | ProjectInspectionFinishedEvent
+  | ProjectHealthUpdatedEvent
+  | ProjectWarningFoundEvent;
 
 export type EventHandler<T extends SystemEvent> = (event: T) => void;

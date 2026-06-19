@@ -31,7 +31,18 @@ export default function App() {
     setExistingFolders
   } = useWorkspaceStore();
 
-  const { workspaceScanner, workspaceEngine, developmentSafety, scannerStatus, safetyStatus, isSafetyCheckRunning } = useCoreEngine(addLog);
+  const { 
+    workspaceScanner, 
+    workspaceEngine, 
+    developmentSafety, 
+    projectInspector,
+    scannerStatus, 
+    safetyStatus, 
+    isSafetyCheckRunning,
+    projectHealthSummary,
+    inspectedProjects,
+    isProjectInspectionRunning
+  } = useCoreEngine(addLog);
 
   // Sync workspace store to engine
   useEffect(() => {
@@ -61,6 +72,10 @@ export default function App() {
     developmentSafety.runSafetyCheck();
   };
 
+  const handleInspectProjects = () => {
+    projectInspector.inspectProjects();
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -70,8 +85,11 @@ export default function App() {
           scannerStatus={scannerStatus}
           safetyStatus={safetyStatus}
           isSafetyCheckRunning={isSafetyCheckRunning}
+          projectHealthSummary={projectHealthSummary}
+          isProjectInspectionRunning={isProjectInspectionRunning}
           onScan={handleScan} 
           onSafetyCheck={handleSafetyCheck}
+          onInspectProjects={handleInspectProjects}
           addLog={addLog} 
         />;
       case 'workspace':
@@ -84,7 +102,14 @@ export default function App() {
           addLog={addLog} 
         />;
       case 'projects':
-        return <ProjectsPage projects={projects} setProjects={setProjects} addLog={addLog} />;
+        return <ProjectsPage 
+          projects={projects} 
+          setProjects={setProjects}
+          inspectedProjects={inspectedProjects}
+          isProjectInspectionRunning={isProjectInspectionRunning}
+          onInspectProjects={handleInspectProjects}
+          addLog={addLog} 
+        />;
       case 'ai-studio':
         return <AIStudioPage />;
       case 'git':

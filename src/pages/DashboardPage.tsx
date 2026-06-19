@@ -1,18 +1,22 @@
 import React from 'react';
-import { Briefcase, FolderOpen, Bot, Github, Settings as SettingsIcon, Play, Workflow, Globe, Server, Activity, Clock, Database, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Briefcase, FolderOpen, Bot, Github, Settings as SettingsIcon, Play, Workflow, Globe, Server, Activity, Clock, Database, RefreshCw, ShieldCheck, HeartPulse } from 'lucide-react';
 import { WorkspaceConfig, Project } from '../types/workspace';
 import { StatusCard } from '../components/StatusCard';
 import { ScannerStatus } from '../core/WorkspaceScanner/types';
 import { SafetyCheckResult } from '../core/DevelopmentSafety/types';
+import { ProjectHealthSummary } from '../core/ProjectInspector/types';
 
 interface DashboardProps {
   workspace: WorkspaceConfig;
   projects: Project[];
   scannerStatus: ScannerStatus;
   safetyStatus: SafetyCheckResult;
+  projectHealthSummary: ProjectHealthSummary;
   isSafetyCheckRunning: boolean;
+  isProjectInspectionRunning: boolean;
   onScan: () => void;
   onSafetyCheck: () => void;
+  onInspectProjects: () => void;
   addLog: (msg: string) => void;
 }
 
@@ -31,7 +35,7 @@ function ActionButton({ icon, label, onClick, variant = 'secondary', disabled = 
   );
 }
 
-export function DashboardPage({ workspace, projects, scannerStatus, safetyStatus, isSafetyCheckRunning, onScan, onSafetyCheck, addLog }: DashboardProps) {
+export function DashboardPage({ workspace, projects, scannerStatus, safetyStatus, projectHealthSummary, isSafetyCheckRunning, isProjectInspectionRunning, onScan, onSafetyCheck, onInspectProjects, addLog }: DashboardProps) {
   const configuredRepos = projects.filter(p => p.repoPath.trim() !== "").length;
   const configuredFolders = [
     workspace.rootFolder, workspace.aiExportFolder, workspace.backupsFolder, 
@@ -54,12 +58,24 @@ export function DashboardPage({ workspace, projects, scannerStatus, safetyStatus
   if (safetyStatus.status === 'Warnings') safetyColor = "text-amber-400 bg-amber-400/10";
   if (safetyStatus.status === 'Errors') safetyColor = "text-red-400 bg-red-400/10";
 
+  const lastInspectionTime = projectHealthSummary.lastInspection 
+    ? new Date(projectHealthSummary.lastInspection).toLocaleTimeString() 
+    : 'Never';
+
   const cards = [
     { id: '1', title: 'Projects Found', value: projects.length.toString(), icon: <FolderOpen className="w-5 h-5" />, color: 'text-blue-400', bg: 'bg-blue-400/10' },
     { id: '2', title: 'Folders Mapped', value: `${configuredFolders} / 5`, icon: <Database className="w-5 h-5" />, color: configuredFolders === 5 ? 'text-emerald-400' : 'text-amber-400', bg: configuredFolders === 5 ? 'bg-emerald-400/10' : 'bg-amber-400/10' },
     { id: '3', title: 'Workspace Health', value: configStatus, icon: <Activity className="w-5 h-5" />, color: statusColor.split(' ')[0], bg: statusColor.split(' ')[1] },
     { id: '4', title: 'Development Safety', value: safetyStatus.status, icon: <ShieldCheck className="w-5 h-5" />, color: safetyColor.split(' ')[0], bg: safetyColor.split(' ')[1] },
     { id: '5', title: 'Scanner Status', value: scannerStatus.isScanning ? 'Scanning...' : 'Idle', icon: <Bot className="w-5 h-5" />, color: scannerStatus.isScanning ? 'text-primary' : 'text-slate-400', bg: scannerStatus.isScanning ? 'bg-primary/20' : 'bg-slate-400/10' }
+  ];
+
+  const healthCards = [
+    { id: 'h1', title: 'Total Projects', value: projectHealthSummary.totalProjects.toString(), icon: <Briefcase className="w-5 h-5" />, color: 'text-slate-400', bg: 'bg-slate-400/10' },
+    { id: 'h2', title: 'Healthy', value: projectHealthSummary.healthy.toString(), icon: <Activity className="w-5 h-5" />, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+    { id: 'h3', title: 'Warnings', value: projectHealthSummary.warnings.toString(), icon: <Activity className="w-5 h-5" />, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+    { id: 'h4', title: 'Errors', value: projectHealthSummary.errors.toString(), icon: <Activity className="w-5 h-5" />, color: 'text-red-400', bg: 'bg-red-400/10' },
+    { id: 'h5', title: 'Last Inspection', value: lastInspectionTime, icon: <Clock className="w-5 h-5" />, color: 'text-purple-400', bg: 'bg-purple-400/10' },
   ];
 
   const handleAction = (action: string) => {
@@ -73,6 +89,17 @@ export function DashboardPage({ workspace, projects, scannerStatus, safetyStatus
         {cards.map(c => (
           <StatusCard key={c.id} {...c} />
         ))}
+      </div>
+
+      <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-800 p-8 rounded-xl shadow-xl shadow-black/20">
+        <h3 className="text-sm uppercase tracking-wider text-slate-400 font-semibold mb-6 flex items-center gap-2">
+          <HeartPulse className="w-4 h-4 text-primary" /> Project Health Summary
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
+          {healthCards.map(c => (
+            <StatusCard key={c.id} {...c} />
+          ))}
+        </div>
       </div>
 
       <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-800 p-8 rounded-xl shadow-xl shadow-black/20">
@@ -94,6 +121,13 @@ export function DashboardPage({ workspace, projects, scannerStatus, safetyStatus
             variant="primary" 
             disabled={isSafetyCheckRunning}
           />
+          <ActionButton 
+            icon={<HeartPulse />} 
+            label={isProjectInspectionRunning ? "Inspecting Projects..." : "Inspect Projects"} 
+            onClick={onInspectProjects} 
+            variant="primary" 
+            disabled={isProjectInspectionRunning}
+          />
           <ActionButton icon={<Workflow />} label="Sync AI Export" onClick={() => handleAction('Sync AI Export')} />
           <ActionButton icon={<Github />} label="Open GitHub Desktop" onClick={() => handleAction('Open GitHub Desktop')} />
           <ActionButton icon={<Globe />} label="Build Portal" onClick={() => handleAction('Build Portal')} />
@@ -103,3 +137,4 @@ export function DashboardPage({ workspace, projects, scannerStatus, safetyStatus
     </div>
   );
 }
+
